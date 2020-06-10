@@ -39,28 +39,31 @@ async function loadFromAPI(api: string): Promise<IAnswer> {
 function decrypt({ cifrado, numero_casas }: IAnswer): string {
     const aCharCode = "a".charCodeAt(0);
     const zCharCode = "z".charCodeAt(0);
+    const alphabetRange = zCharCode - aCharCode;
+
+    const isLetter = (letterCode: number) => letterCode >= aCharCode && letterCode <= zCharCode;
+
+    const decryptChar = (char: string) => {
+        const encryptedCharCode = char.charCodeAt(0);
+        let decryptedCharCode = encryptedCharCode;
+
+        if (isLetter(encryptedCharCode)) {
+            decryptedCharCode -= numero_casas;
+
+            if (decryptedCharCode > zCharCode) {
+                decryptedCharCode -= alphabetRange;
+            } else if (decryptedCharCode < aCharCode) {
+                decryptedCharCode += alphabetRange;
+            }
+        }
+
+        return String.fromCharCode(decryptedCharCode);
+    };
 
     const decrypted = cifrado
-        .split(' ')
-        .map(word => word.split('')
-            .map(char => {
-                const encryptedCharCode = char.charCodeAt(0);
-                let decryptedCharCode: number;
-
-                if (encryptedCharCode >= aCharCode && encryptedCharCode <= zCharCode) {
-                    decryptedCharCode = encryptedCharCode - numero_casas;
-                    if (decryptedCharCode > zCharCode) {
-                        decryptedCharCode -= 26;
-                    } else if (decryptedCharCode < aCharCode) {
-                        decryptedCharCode += 26;
-                    }
-                } else {
-                    decryptedCharCode = encryptedCharCode;
-                }
-
-                return String.fromCharCode(decryptedCharCode);
-            }).join('')
-        ).join(' ');
+        .split('')
+        .map(char => decryptChar(char))
+        .join('');
 
     return decrypted;
 }
